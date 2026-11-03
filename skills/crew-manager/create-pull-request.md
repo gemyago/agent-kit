@@ -4,7 +4,7 @@ Resolve **module root** (directory containing `AGENTS.md` for this work). Read a
 
 Follow this instruction to create Bitbucket pull request **automatically**. If you don't have access to Bitbucket or Jira tools, mention it to the user and ask them to fix it.
 
-1. Gather branch details. You will need to run command like below
+1. Gather branch details. You will need to run command like below 
 ```bash
 # fetch latest changes from remote
 git fetch
@@ -36,11 +36,11 @@ The `bitbucket_create_pr` will be failing without this step.
 
 3. Review commit history and come up with a sensible PR title using approaches below:
 
-If branch name has a Jira issue key (for example, PROJECT-123):
+If branch name has JIRA ticket number (SAAS-XXXXXX):
 - Figure out jira cloud details by using `getAccessibleAtlassianResources` MCP tool
 - read jira ticket details using jira cloud details and JIRA ticket number. Then use jira ticket title as pr title. Example:
 ```
-PROJECT-123: <original jira ticket title>
+SAAS-18048: <original jira ticket title>
 ```
 
 Otherwise just come-up some sensible PR title based on the changes.
@@ -81,5 +81,5 @@ Please use the exact template below to prepare PR body. Remember the body, you w
 
 - tell the user that the PR has been created and show PR link to the user. The link **should be clickable**.
 
-**IMPORTANT**
+**IMPORTANT** 
 Your job is to create the PR and nothing else. If unsure, ask user for clarification. If anything goes wrong, ask user for clarification.
