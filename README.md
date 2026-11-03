@@ -11,7 +11,7 @@ A collection of things I use, build, and experiment with. Some are general-purpo
 
 ## Usage
 
-The crew skills are copied from CrossDesk with their existing configuration and helper scripts. A sharing mechanism is still to be decided.
+The crew skills include configuration and helper scripts. A sharing mechanism is still to be decided.
 
 The existing setup script copies both skills into a workspace and generates OpenCode agents:
 
