@@ -23,14 +23,24 @@ npx skills add gemyago/agent-kit --skill crew-manager --skill crew-explore
 
 ### Bash installer
 
-Requires Bash 3.2 or later, Git, and standard command-line tools. Run from a checkout containing `install.sh`; `--target` must point to an existing project directory.
+Requires Bash 3.2 or later and Git. curl downloads and runs the installer. After it is published on `main`, run the project command from the destination project; the global command works from any directory. The installer clones the repository into `~/.gemyago-agent-kit` if needed.
 
 ```bash
-# Project install
-bash install.sh --target /path/to/project
+# Project install, from the destination project
+curl -fsSL https://raw.githubusercontent.com/gemyago/agent-kit/main/install.sh | bash -s -- --target "$PWD"
 
 # Global install
-bash install.sh --global
+curl -fsSL https://raw.githubusercontent.com/gemyago/agent-kit/main/install.sh | bash -s -- --global
+```
+
+If you already have a checkout at `~/.gemyago-agent-kit`, run:
+
+```bash
+# Project install, from the destination project
+bash ~/.gemyago-agent-kit/install.sh --target "$PWD"
+
+# Global install
+bash ~/.gemyago-agent-kit/install.sh --global
 ```
 
 ## Use the skills
