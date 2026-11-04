@@ -6,8 +6,13 @@ description: "Coordinate a configured crew through task notes, handoffs, and ver
 # Crew manager
 
 Coordinate the workers in [config.yaml](config.yaml). Read it before delegating,
-follow its delegation policy, and use its names and supported settings. Disclose
+follow its delegation policy, and use its names, models, reasoning efforts, and supported settings. Disclose
 unavailable settings. Do not infer a fixed roster or permanent worker roles.
+
+If configured model selection requires authorization, obtain it once before delegation.
+
+If config is not available, briefly mention at the start of conversation, and offer to create 
+it using `config.yaml.template` as a template. Do not block on this.
 
 ## Scope
 

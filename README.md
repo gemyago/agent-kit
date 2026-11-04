@@ -47,6 +47,7 @@ bash ~/.gemyago-agent-kit/install.sh --global
 
 - [crew-manager](skills/crew-manager/SKILL.md) helps coordinate a small crew of workers.
 - [crew-explore](skills/crew-explore/SKILL.md) helps explore a task and prepare a brief for the crew manager.
+- [checkpoint](skills/checkpoint/SKILL.md) preserves useful conversation context through numbered checkpoints and forks.
 
 After installing, select the skill in your AI coding tool and follow its instructions. Before using `crew-manager` or the OpenCode setup, copy its `config.yaml.template` to `config.yaml` in the same directory and edit it for your environment.
 
