@@ -100,5 +100,6 @@ Report the goal, completed work, verification, and any remaining limits.
 
 ## Submit
 
-When asked to submit, delegate submission to a worker. Require
+When asked to submit, delegate submission to a worker. Use project specific instructions
+to commit and create pull request if available. Otherwise use generic instructions from
 [commit.md](commit.md) and [create-pull-request.md](create-pull-request.md).
