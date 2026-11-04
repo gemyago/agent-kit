@@ -6,11 +6,20 @@ A collection of things I use, build, and experiment with. Some are general-purpo
 
 ## What's here
 
-- Nothing for now, I'll update this as I add stuff
+- [crew-manager](skills/crew-manager/SKILL.md): coordinate a small crew of workers, with configuration, shared rules, and OpenCode setup scripts.
+- [crew-explore](skills/crew-explore/SKILL.md): explore and plan a task, then write a brief for the crew manager.
 
 ## Usage
 
-Since there is nothing for now, then not much you can use yet, stay tuned!
+The crew skills include configuration and helper scripts. A sharing mechanism is still to be decided.
+
+The existing setup script copies both skills into a workspace and generates OpenCode agents:
+
+```bash
+./skills/crew-manager/setup.sh --target /path/to/workspace
+```
+
+The target workspace must already exist. Setup overwrites existing crew skill copies, adds local Git ignores for generated files, and requires Python 3. If PyYAML is missing, it installs it in a user cache virtual environment.
 
 ## Contributing
 
