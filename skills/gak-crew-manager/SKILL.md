@@ -17,7 +17,7 @@ obtain it once before delegation.
 
 If the configuration is missing, briefly mention it and offer to create it from
 `crew-manager.yaml.template` in the agent-kit checkout root. If that checkout is
-also missing, point to the [setup instructions](https://github.com/gemyago/agent-kit#personal-crew-configuration). Do not block the
+also missing, point to the [setup instructions](https://github.com/gemyago/agent-kit#installation). Do not block the
 conversation or invent configured profiles.
 
 ## Scope
