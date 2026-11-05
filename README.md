@@ -1,54 +1,32 @@
 # agent-kit
 
-Gemyago's kit of tools, prompts, and other stuff for AI and agentic workflows.
+Gemyago's skills for AI and agentic workflows.
 
-## Install
+## Available skills
 
-Choose either the skills CLI or the Bash installer.
+- [gak-crew-manager](skills/gak-crew-manager/SKILL.md): Coordinate workers through assignments, handoffs, and verification.
+- [gak-crew-explore](skills/gak-crew-explore/SKILL.md): Explore a task and prepare a brief for the crew manager.
+- [gak-checkpoint](skills/gak-checkpoint/SKILL.md): Preserve useful conversation context through checkpoints and forks.
 
-### Skills CLI
+## Installation
 
-Requires Node.js 22.20 or later and npm/npx. Run the first command inside your project for a project install, or use `--global` for a global install:
+Use the skills CLI from your project, or add `--global` for a personal install:
 
 ```bash
 npx skills add gemyago/agent-kit
 npx skills add gemyago/agent-kit --global
 ```
 
-The CLI can prompt you to choose skills and supported agents. To select these skills directly:
+Alternatively, use the Bash installer:
 
 ```bash
-npx skills add gemyago/agent-kit --skill crew-manager --skill crew-explore
-```
-
-### Bash installer
-
-Requires Bash 3.2 or later and Git. curl downloads and runs the installer. After it is published on `main`, run the project command from the destination project; the global command works from any directory. The installer clones the repository into `~/.gemyago-agent-kit` if needed.
-
-```bash
-# Project install, from the destination project
+# Project install
 curl -fsSL https://raw.githubusercontent.com/gemyago/agent-kit/main/install.sh | bash -s -- --target "$PWD"
 
 # Global install
 curl -fsSL https://raw.githubusercontent.com/gemyago/agent-kit/main/install.sh | bash -s -- --global
 ```
 
-If you already have a checkout at `~/.gemyago-agent-kit`, run:
-
-```bash
-# Project install, from the destination project
-bash ~/.gemyago-agent-kit/install.sh --target "$PWD"
-
-# Global install
-bash ~/.gemyago-agent-kit/install.sh --global
-```
-
-## Use the skills
-
-- [crew-manager](skills/crew-manager/SKILL.md) helps coordinate a small crew of workers.
-- [crew-explore](skills/crew-explore/SKILL.md) helps explore a task and prepare a brief for the crew manager.
-- [checkpoint](skills/checkpoint/SKILL.md) preserves useful conversation context through numbered checkpoints and forks.
-
-After installing, select the skill in your AI coding tool and follow its instructions. Before using `crew-manager` or the OpenCode setup, copy its `config.yaml.template` to `config.yaml` in the same directory and edit it for your environment.
-
-Optional: to copy both skills into an existing workspace and configure OpenCode, run `./skills/crew-manager/setup.sh --target /path/to/workspace` from a checkout. It requires Python 3.
+Crew settings live in `~/.gemyago-agent-kit/crew-manager.yaml`. The Bash installer
+initializes this file without overwriting existing settings. For a CLI-only
+install, create it from [crew-manager.yaml.template](crew-manager.yaml.template).

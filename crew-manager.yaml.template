@@ -1,8 +1,8 @@
-# Crew manager configuration for generated surface entrypoints.
+# Personal crew manager configuration, shared by skills and generated OpenCode agents.
 # manager.model: short label for delegation messages in prompt-driven environments
 # manager.opencode_model: fully-qualified OpenCode model (provider/model)
 manager:
-  agent_name: crew-manager
+  agent_name: gak-crew-manager
   description: General purpose orchestrator agent for coordinating tasks and workflows.
   model: gpt-6.1-sol
   opencode_model: openai/gpt-6.1-sol
@@ -19,46 +19,46 @@ manager:
     - For independent verification, use a fresh P3 High invocation with an explicit read-only review assignment.
     - Require independent verification for security, concurrency, migrations, data integrity, public contracts, high blast radius, and P4 High work.
 # explorer: unrestricted primary agent for a session forked from the manager's,
-# following the crew-explore skill and handing back a brief.
+# following the gak-crew-explore skill and handing back a brief.
 explorer:
-  agent_name: crew-explore
+  agent_name: gak-crew-explore
   description: Exploration, discussion and planning partner for a forked crew-manager session; writes a brief the manager resumes from.
   model: gpt-6.1-sol
   opencode_model: openai/gpt-6.1-sol
   reasoning_effort: high
 workers:
   p2:
-    agent_name: crew-p2
+    agent_name: gak-crew-p2
     description: Execution profile for narrow, well-specified work whose target, implementation path, and verification method are explicit. Use for targeted edits, small fixes, focused tests, status checks, and precise information collection.
     model: gpt-6-luna
     opencode_model: openai/gpt-6-luna
     reasoning_effort: medium
   p2-high:
-    agent_name: crew-p2-high
+    agent_name: gak-crew-p2-high
     description: High-effort execution profile for bounded, well-specified work that remains explicit but requires more context, several precise steps, or more careful verification than P2. Avoid ambiguous investigation, architecture, and cross-system design.
     model: gpt-6-luna
     opencode_model: openai/gpt-6-luna
     reasoning_effort: high
   p3:
-    agent_name: crew-p3
+    agent_name: gak-crew-p3
     description: Engineering profile for normal implementation in a substantially understood problem space, including features, bug fixes, refactors, tests, endpoints, persistence, and precise UI implementation from an established design.
     model: gpt-6.1-sol
     opencode_model: openai/gpt-6.1-sol
     reasoning_effort: medium
   p3-high:
-    agent_name: crew-p3-high
+    agent_name: gak-crew-p3-high
     description: High-effort engineering profile for difficult debugging, unfamiliar code, coupled components, correctness-sensitive implementation, broad technical context, and rigorous independent review. The invocation defines whether to investigate, implement, or review.
     model: gpt-6.1-sol
     opencode_model: openai/gpt-6.1-sol
     reasoning_effort: high
   p4:
-    agent_name: crew-p4
+    agent_name: gak-crew-p4
     description: Synthesis profile for visual or product judgment, interaction and layout composition, design exploration, ambiguous requirements, and choosing among plausible approaches. Use P3 when the design is already substantially known.
     model: gpt-6-astra
     opencode_model: openai/gpt-6-astra
     reasoning_effort: high
   p4-high:
-    agent_name: crew-p4-high
+    agent_name: gak-crew-p4-high
     description: High-effort synthesis profile for major architecture, system-wide direction, competing product or technical approaches, complex decomposition, and exceptional ambiguity where choosing what should be built is the primary challenge.
     model: gpt-6-astra
     opencode_model: openai/gpt-6-astra

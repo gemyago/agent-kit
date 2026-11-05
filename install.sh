@@ -8,6 +8,7 @@ Usage: bash install.sh --global
        bash install.sh --target /existing/project
 
 Install all skills from the cached checkout's HEAD commit.
+Create crew-manager.yaml in that checkout if missing; preserve personal settings.
   --global       Install to ~/.agents/skills
   --target DIR   Install to DIR/.agents/skills (DIR must exist)
   -h, --help     Show this help
@@ -133,6 +134,30 @@ while IFS= read -r -d '' entry; do
     chmod 644 "$scratch/source/$path"
   fi
 done < "$scratch/tree"
+git -C "$checkout" cat-file blob "$commit:crew-manager.yaml.template" > "$scratch/crew-manager.yaml.template"
+config_path="$checkout/crew-manager.yaml"
+[[ ! -L "$config_path" ]] || die "personal configuration must not be a symlink: $config_path"
+[[ ! -e "$config_path" || -f "$config_path" ]] || die "personal configuration is not a regular file: $config_path"
+
+owned_skill() {
+  local directory="$1" source_path="$2"
+  [[ -f "$directory/SKILL.md" ]] || return 1
+  awk -v expected="$source_path" '
+    NR == 1 { if ($0 != "---") exit; next }
+    /^---$|^\.\.\.$/ { exit }
+    $1 == "gemyago-source-path:" {
+      value=$2; gsub(/"/, "", value)
+      if (value == expected) owned=1
+    }
+    END { exit !owned }
+  ' "$directory/SKILL.md"
+}
+
+check_skill_files() {
+  local directory="$1"
+  find "$directory" ! -type d ! -type f -print > "$scratch/conflicts"
+  [[ ! -s "$scratch/conflicts" ]] || die "destination skill contains a symlink or special file: $directory"
+}
 
 # This is deliberately a parser for our block-style frontmatter, not a YAML
 # interpreter. Unsupported metadata shapes fail before any destination writes.
@@ -227,15 +252,24 @@ for source in "$scratch/source/skills/"*/SKILL.md; do
   skill_destination="$destination/$name"
   check_directory_path "$skill_destination"
   if [[ -d "$skill_destination" ]]; then
-    # Refuse links and special files rather than risk writes outside this skill.
-    find "$skill_destination" ! -type d ! -type f -print > "$scratch/conflicts"
-    [[ ! -s "$scratch/conflicts" ]] || die "destination skill contains a symlink or special file: $skill_destination"
+    check_skill_files "$skill_destination"
+    owned_skill "$skill_destination" "skills/$name" || die "refusing to overwrite a skill not owned by agent-kit: $skill_destination"
+  fi
+  legacy_name="${name#gak-}"
+  legacy_destination="$destination/$legacy_name"
+  validation_destination="$skill_destination"
+  if [[ "$legacy_name" != "$name" && -d "$legacy_destination" && ! -L "$legacy_destination" ]] && owned_skill "$legacy_destination" "skills/$legacy_name"; then
+    check_directory_path "$legacy_destination"
+    check_skill_files "$legacy_destination"
+    [[ ! -e "$skill_destination" ]] || die "both legacy and namespaced skills exist; move the legacy installation aside: $legacy_destination"
+    validation_destination="$legacy_destination"
+    printf '%s\n' "$name" >> "$scratch/migrations"
   fi
   find "${source%/SKILL.md}" -type f -print0 > "$scratch/files"
   while IFS= read -r -d '' file; do
     relative="${file#"${source%/SKILL.md}/"}"
-    check_directory_path "$(dirname "$skill_destination/$relative")"
-    [[ ! -e "$skill_destination/$relative" || -f "$skill_destination/$relative" ]] || die "destination file conflicts with a directory: $skill_destination/$relative"
+    check_directory_path "$(dirname "$validation_destination/$relative")"
+    [[ ! -e "$validation_destination/$relative" || -f "$validation_destination/$relative" ]] || die "destination file conflicts with a directory: $validation_destination/$relative"
   done < "$scratch/files"
   count=$((count + 1))
 done
@@ -243,6 +277,28 @@ done
 
 # Staging and metadata validation finish before installation begins. Copying
 # merges directories: reruns overwrite matching files and retain extra files.
+if [[ ! -f "$config_path" ]]; then
+  checkout_config="$checkout/skills/crew-manager/config.yaml"
+  legacy_config="$destination/crew-manager/config.yaml"
+  if [[ -e "$checkout_config" || -L "$checkout_config" ]]; then
+    check_directory_path "$(dirname "$checkout_config")"
+    [[ -f "$checkout_config" && ! -L "$checkout_config" ]] || die "legacy configuration is not a regular file: $checkout_config"
+    cp -p "$checkout_config" "$config_path"
+    printf 'Preserved checkout crew configuration in %s\n' "$config_path"
+  elif owned_skill "$destination/crew-manager" "skills/crew-manager" && [[ -f "$legacy_config" ]]; then
+    cp -p "$legacy_config" "$config_path"
+    printf 'Preserved legacy crew configuration in %s\n' "$config_path"
+  else
+    cp "$scratch/crew-manager.yaml.template" "$config_path"
+    printf 'Created personal configuration: %s\n' "$config_path"
+  fi
+fi
+if [[ -f "$scratch/migrations" ]]; then
+  while IFS= read -r name; do
+    mv "$destination/${name#gak-}" "$destination/$name"
+    printf 'Migrated %s to %s\n' "${name#gak-}" "$name"
+  done < "$scratch/migrations"
+fi
 mkdir -p "$destination"
 for source in "$scratch/source/skills/"*/SKILL.md; do
   [[ -f "$source" ]] || continue
