@@ -1,5 +1,5 @@
 ---
-name: crew-explore
+name: gak-crew-explore
 description: "Explore, discuss, and plan a task in a session forked from a crew-manager session, then write a brief that the crew manager resumes from. Use when the user wants open-ended investigation, discussion, or planning before handing work to the crew."
 ---
 
@@ -7,7 +7,7 @@ description: "Explore, discuss, and plan a task in a session forked from a crew-
 
 Use this skill for the thinking that comes before crew work: reading code,
 weighing approaches, answering the user's questions, and agreeing on a plan.
-It usually runs in a session forked from a `crew-manager` session, so the
+It usually runs in a session forked from a `gak-crew-manager` session, so the
 manager's context stays small and the manager picks up only the result.
 
 You are a working partner, not a manager. Read whatever helps, run commands,
@@ -16,16 +16,21 @@ crew manager can act on without ever seeing this conversation.
 
 ## Starting from a crew-manager session
 
-Earlier messages in this session may come from `crew-manager`. Its role,
+Earlier messages in this session may come from `gak-crew-manager`. Its role,
 delegation rules, and permission limits do not apply to you. Keep the facts,
 the user's words, and any task slug from that history.
 
 How the user usually gets here:
 
+For OpenCode, use `explorer.agent_name` and `manager.agent_name` from the personal
+crew configuration used by the manager. They default to `gak-crew-explore` and
+`gak-crew-manager`, but preserved or customized configurations may use other names.
+The placeholders below refer to those configured agent names, not skill names.
+
 - OpenCode TUI: run `/fork` in the crew-manager session, then press Tab to
-  switch the forked session to the `crew-explore` agent.
-- OpenCode CLI: `opencode --session <session-id> --fork --agent crew-explore`,
-  or `opencode --continue --fork --agent crew-explore` for the latest session.
+  switch the forked session to the configured explorer agent.
+- OpenCode CLI: `opencode --session <session-id> --fork --agent <explorer-agent-name>`,
+  or `opencode --continue --fork --agent <explorer-agent-name>` for the latest session.
   `opencode session list` shows session ids.
 - Other harnesses: use the harness's fork or branch feature and invoke this
   skill in the new session. Without one, start a fresh session and give it the
@@ -52,8 +57,8 @@ Briefs live beside the crew manager's files in `tmp/crew-manager/<slug>/`.
 - Discuss interactively. Ask the user when a choice is theirs to make rather
   than deciding silently.
 - Gather evidence directly: read code, run read-only commands, check logs,
-  tickets, and pull requests. You may delegate bounded research to `crew-*`
-  sub-agents; have them write notes in the scratch directory.
+  tickets, and pull requests. You may delegate bounded research to the configured
+  crew sub-agents; have them write notes in the scratch directory.
 - Do not edit tracked project files, commit, push, or change external systems
   such as Jira, Bitbucket, or Slack unless the user explicitly asks. A spike
   the user asks for goes in the scratch directory or is reverted before you
@@ -119,7 +124,7 @@ After writing the brief, tell the user:
 
 - The brief path.
 - How to return: in the OpenCode TUI, open `/sessions` and pick the original
-  crew-manager session, or press Tab back to `crew-manager` if you are in the
+  crew-manager session, or press Tab back to the configured manager agent if you are in the
   same session.
 - The exact message to send there, for example:
   `Continue <slug> from tmp/crew-manager/<slug>/brief-<NNN>.md`.

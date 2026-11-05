@@ -1,5 +1,5 @@
 ---
-name: checkpoint
+name: gak-checkpoint
 description: "Preserve useful conversation context through numbered checkpoints and forks, leaving intermediate exploration behind. Use when the user asks to mark a checkpoint or resume from one with distilled findings."
 ---
 

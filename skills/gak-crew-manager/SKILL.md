@@ -1,18 +1,24 @@
 ---
-name: crew-manager
+name: gak-crew-manager
 description: "Coordinate a configured crew through task notes, handoffs, and verification."
 ---
 
 # Crew manager
 
-Coordinate the workers in [config.yaml](config.yaml). Read it before delegating,
-follow its delegation policy, and use its names, models, reasoning efforts, and supported settings. Disclose
-unavailable settings. Do not infer a fixed roster or permanent worker roles.
+Read the personal configuration at `~/.gemyago-agent-kit/crew-manager.yaml`
+before delegating. If `GEMYAGO_AGENT_KIT_HOME` is supplied, use
+`<GEMYAGO_AGENT_KIT_HOME>/crew-manager.yaml` instead. A configuration path supplied
+by the user or generated harness entrypoint takes precedence.
 
-If configured model selection requires authorization, obtain it once before delegation.
+Follow its delegation policy and use its names, models, reasoning efforts, and
+supported settings. Disclose unavailable settings. Do not infer a fixed roster
+or permanent worker roles. If configured model selection requires authorization,
+obtain it once before delegation.
 
-If config is not available, briefly mention at the start of conversation, and offer to create 
-it using `config.yaml.template` as a template. Do not block on this.
+If the configuration is missing, briefly mention it and offer to create it from
+`crew-manager.yaml.template` in the agent-kit checkout root. If that checkout is
+also missing, point to the [setup instructions](https://github.com/gemyago/agent-kit#personal-crew-configuration). Do not block the
+conversation or invent configured profiles.
 
 ## Scope
 
@@ -42,14 +48,14 @@ task title/read-status updates, and archiving completed workers. No answer leave
 the default in place.
 
 Preserve the user's choice for the task. For chat mode, read
-[chat-mode.md](chat-mode.md) before delegation.
+[chat-mode.md](references/chat-mode.md) before delegation.
 
 ## Delegate
 
 - Assign one self-contained task per worker. Group closely coupled work without over-splitting it.
 - Follow repository parallelism rules. Without a policy, parallelize only independent tasks that cannot edit the same files.
 - Give each worker its profile, scope, checkout, task-file paths, and exact notes path.
-- Require [shared-rules.md](shared-rules.md) and the affected repository's `AGENTS.md` instructions.
+- Require [shared-rules.md](references/shared-rules.md) and the affected repository's `AGENTS.md` instructions.
 - Record the worker session, profile, and completion route in the journal before yielding.
 
 Keep status in the journal concise:
@@ -75,14 +81,14 @@ Do not poll progress, request status reports, inspect unfinished notes or live
 transcripts, or amplify injected worker output. Read notes after a completion or
 blocker handoff. For sub-agents, use completion events or a bounded completion
 wait, renewing it quietly when required. Chat-mode handoff, read-status, and
-archiving rules are defined in `chat-mode.md`.
+archiving rules are defined in [chat-mode.md](references/chat-mode.md).
 
 Give the user a brief delegation notice and final report. Speak sooner for a
 decision, blocker, failure, or requested update.
 
 ## Use exploration briefs
 
-For discussion before implementation, use `crew-explore` in a fork. Create the
+For discussion before implementation, use `gak-crew-explore` in a fork. Create the
 task directory and `user-input.md` first and give the user the slug.
 
 When the user supplies `brief-<NNN>.md`, read it and treat its decisions as approved
@@ -96,7 +102,7 @@ After each invocation, read its notes. Require the applicable completion
 protocol, checks and outcomes, and disclosed failures, skips, or remaining work.
 A bare "done" is not evidence.
 
-Follow `config.yaml` for independent verification. Add verification when evidence
+Follow `crew-manager.yaml` for independent verification. Add verification when evidence
 is missing, checks fail, the result conflicts with the task, or repository rules
 require it. Clear, consistent evidence of successful required checks otherwise
 suffices.
@@ -107,4 +113,4 @@ Report the goal, completed work, verification, and any remaining limits.
 
 When asked to submit, delegate submission to a worker. Use project specific instructions
 to commit and create pull request if available. Otherwise use generic instructions from
-[commit.md](commit.md) and [create-pull-request.md](create-pull-request.md).
+[commit.md](references/commit.md) and [create-pull-request.md](references/create-pull-request.md).
