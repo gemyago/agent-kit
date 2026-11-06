@@ -73,6 +73,102 @@ class InstallationTests(unittest.TestCase):
         text = (self.target / ".opencode/agents" / f"{name}.md").read_text()
         return yaml.safe_load(text.split("---", 2)[1]), text
 
+    def advance_upstream(self):
+        upstream = self.root / "upstream"
+        result = run("git", "clone", "--quiet", str(self.fixture), str(upstream))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        skill = upstream / "skills/gak-checkpoint/SKILL.md"
+        skill.write_text(skill.read_text() + "\nUpdated upstream skill\n")
+        self.commit_changes(upstream)
+        result = run("git", "remote", "set-url", "origin", str(upstream), cwd=self.checkout)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return run("git", "rev-parse", "HEAD", cwd=upstream).stdout.strip()
+
+    def commit_changes(self, repository):
+        result = run("git", "-c", "user.name=GAK Tests", "-c", "user.email=gak@example.invalid",
+                     "commit", "--quiet", "-am", "Test update", cwd=repository)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_install_without_pull_uses_cached_head(self):
+        original = run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip()
+        self.advance_upstream()
+        self.install()
+        self.assertEqual(run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip(), original)
+        installed = (self.destination / "gak-checkpoint/SKILL.md").read_text()
+        self.assertNotIn("Updated upstream skill", installed)
+        self.assertIn(f'gemyago-source-commit: "{original}"', installed)
+
+    def test_pull_updates_skills_and_preserves_personal_settings(self):
+        self.install()
+        custom = self.config.read_text() + "\n# Personal settings\n"
+        self.config.write_text(custom)
+        commit = self.advance_upstream()
+        self.install("--global", "--pull")
+        installed = (self.destination / "gak-checkpoint/SKILL.md").read_text()
+        self.assertIn("Updated upstream skill", installed)
+        self.assertIn(f'gemyago-source-commit: "{commit}"', installed)
+        self.assertEqual(self.config.read_text(), custom)
+        self.assertEqual(run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip(), commit)
+
+    def test_pull_works_with_project_target(self):
+        commit = self.advance_upstream()
+        self.install("--pull", "--target", str(self.target))
+        installed = (self.target / ".agents/skills/gak-checkpoint/SKILL.md").read_text()
+        self.assertIn("Updated upstream skill", installed)
+        self.assertIn(f'gemyago-source-commit: "{commit}"', installed)
+
+    def test_pull_failure_leaves_existing_installation_and_settings_unchanged(self):
+        self.install()
+        installed = self.destination / "gak-checkpoint/SKILL.md"
+        original = installed.read_bytes()
+        custom = self.config.read_text() + "\n# Personal settings\n"
+        self.config.write_text(custom)
+        result = run("git", "remote", "set-url", "origin", str(self.root / "missing remote"), cwd=self.checkout)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = self.install("--global", "--pull", success=False)
+        self.assertIn("pull failed; installation stopped", result.stderr)
+        self.assertEqual(installed.read_bytes(), original)
+        self.assertEqual(self.config.read_text(), custom)
+
+    def test_pull_rejects_diverged_history_without_installing(self):
+        self.advance_upstream()
+        template = self.checkout / "crew-manager.yaml.template"
+        template.write_text(template.read_text() + "\n# Local commit\n")
+        self.commit_changes(self.checkout)
+        original = run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip()
+        # User pull preferences must not turn this into a rebase or merge.
+        result = run("git", "config", "pull.rebase", "true", cwd=self.checkout)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.install("--global", "--pull", success=False)
+        self.assertEqual(run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip(), original)
+        self.assertFalse(self.destination.exists())
+        self.assertFalse(self.config.exists())
+
+    def test_pull_preserves_conflicting_local_edits_without_installing(self):
+        self.advance_upstream()
+        skill = self.checkout / "skills/gak-checkpoint/SKILL.md"
+        custom = skill.read_text() + "\nLocal edit\n"
+        skill.write_text(custom)
+        original = run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip()
+        result = run("git", "config", "merge.autoStash", "true", cwd=self.checkout)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.install("--global", "--pull", success=False)
+        self.assertEqual(run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip(), original)
+        self.assertEqual(skill.read_text(), custom)
+        self.assertFalse(self.destination.exists())
+        self.assertFalse(self.config.exists())
+
+    def test_pull_works_when_checkout_must_be_cloned(self):
+        shutil.rmtree(self.checkout)
+        self.env.update(GIT_CONFIG_COUNT="1",
+                        GIT_CONFIG_KEY_0=f"url.{self.fixture}.insteadOf",
+                        GIT_CONFIG_VALUE_0="https://github.com/gemyago/agent-kit.git")
+        # Run the entry script outside the cache, as with the curl install.
+        result = run("bash", str(ROOT / "install.sh"), "--global", "--pull", env=self.env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual({p.name for p in self.destination.iterdir()}, SKILLS)
+        self.assertTrue(self.config.is_file())
+
     def test_fresh_install_and_update_preserve_personal_settings(self):
         self.install()
         self.assertEqual({p.name for p in self.destination.iterdir()}, SKILLS)

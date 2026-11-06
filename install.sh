@@ -4,13 +4,14 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: bash install.sh --global
-       bash install.sh --target /existing/project
+Usage: bash install.sh --global [--pull]
+       bash install.sh --target /existing/project [--pull]
 
 Install all skills from the cached checkout's HEAD commit.
 Create crew-manager.yaml in that checkout if missing; preserve personal settings.
   --global       Install to ~/.agents/skills
   --target DIR   Install to DIR/.agents/skills (DIR must exist)
+  --pull         Pull the checkout's upstream first (fast-forward only)
   -h, --help     Show this help
 
 GEMYAGO_AGENT_KIT_HOME overrides the checkout at ~/.gemyago-agent-kit.
@@ -23,6 +24,7 @@ argument_error() { printf 'error: %s\n' "$*" >&2; usage >&2; exit 2; }
 
 scope=''
 target=''
+pull=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --global)
@@ -43,6 +45,7 @@ while [[ $# -gt 0 ]]; do
         shift
       fi
       ;;
+    --pull) pull=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) argument_error "unexpected argument: $1" ;;
   esac
@@ -92,18 +95,24 @@ checkout="${GEMYAGO_AGENT_KIT_HOME:-$HOME/.gemyago-agent-kit}"
 [[ "$checkout" == /* ]] || checkout="$PWD/$checkout"
 check_directory_path "$checkout"
 checkout="$(normalize_absolute_path "$checkout")"
+cloned=false
 if [[ ! -e "$checkout" ]]; then
   printf 'Cloning agent-kit into %s\n' "$checkout"
   mkdir -p "$(dirname "$checkout")"
   git clone -- https://github.com/gemyago/agent-kit.git "$checkout"
+  cloned=true
 fi
 [[ -d "$checkout/.git" || -f "$checkout/.git" ]] || die "checkout is not a Git working tree: $checkout"
 checkout="$(cd "$checkout" && pwd -P)"
 [[ "$(git -C "$checkout" rev-parse --show-toplevel)" == "$checkout" ]] || die "checkout must be a Git repository root: $checkout"
-commit="$(git -C "$checkout" rev-parse --verify 'HEAD^{commit}')"
 case "$destination/" in
   "$checkout/skills/"*) die 'destination must not overwrite checkout skill sources' ;;
 esac
+if [[ "$pull" == true && "$cloned" == false ]]; then
+  printf 'Pulling agent-kit in %s\n' "$checkout"
+  git -C "$checkout" pull --ff-only --no-rebase --no-autostash || die 'pull failed; installation stopped'
+fi
+commit="$(git -C "$checkout" rev-parse --verify 'HEAD^{commit}')"
 
 # All scratch stays inside the cached repository, never the system temp folder.
 check_directory_path "$checkout/tmp"

@@ -27,6 +27,13 @@ curl -fsSL https://raw.githubusercontent.com/gemyago/agent-kit/main/install.sh |
 curl -fsSL https://raw.githubusercontent.com/gemyago/agent-kit/main/install.sh | bash -s -- --global
 ```
 
+The Bash installer uses the cached checkout's HEAD. Add `--pull` to update it
+from its upstream before installing (fast-forward only):
+
+```bash
+bash ~/.gemyago-agent-kit/install.sh --global --pull
+```
+
 Crew settings live in `~/.gemyago-agent-kit/crew-manager.yaml`. The Bash installer
 initializes this file without overwriting existing settings. For a CLI-only
 install, create it from [crew-manager.yaml.template](crew-manager.yaml.template).
