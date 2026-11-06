@@ -73,63 +73,166 @@ class InstallationTests(unittest.TestCase):
         text = (self.target / ".opencode/agents" / f"{name}.md").read_text()
         return yaml.safe_load(text.split("---", 2)[1]), text
 
+    def advance_upstream(self):
+        upstream = self.root / "upstream"
+        result = run("git", "clone", "--quiet", str(self.fixture), str(upstream))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        skill = upstream / "skills/gak-checkpoint/SKILL.md"
+        skill.write_text(skill.read_text() + "\nUpdated upstream skill\n")
+        self.commit_changes(upstream)
+        result = run("git", "remote", "set-url", "origin", str(upstream), cwd=self.checkout)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return run("git", "rev-parse", "HEAD", cwd=upstream).stdout.strip()
+
+    def head(self, repository=None):
+        result = run("git", "rev-parse", "HEAD", cwd=repository or self.checkout)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout.strip()
+
+    def state_records(self):
+        records = [line.split("\t") for line in
+                   (self.checkout / ".install-state").read_text().splitlines()]
+        self.assertEqual(len(records), len({location for location, _ in records}))
+        return dict(records)
+
+    def commit_changes(self, repository):
+        result = run("git", "add", "--all", cwd=repository)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = run("git", "-c", "user.name=GAK Tests", "-c", "user.email=gak@example.invalid",
+                     "commit", "--quiet", "-am", "Test update", cwd=repository)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_install_without_pull_uses_cached_head(self):
+        original = run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip()
+        self.advance_upstream()
+        self.install()
+        self.assertEqual(run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip(), original)
+        installed = (self.destination / "gak-checkpoint/SKILL.md").read_text()
+        self.assertNotIn("Updated upstream skill", installed)
+        self.assertEqual(self.state_records(), {str(self.destination): original})
+
+    def test_pull_updates_skills_and_preserves_personal_settings(self):
+        self.install()
+        custom = self.config.read_text() + "\n# Personal settings\n"
+        self.config.write_text(custom)
+        commit = self.advance_upstream()
+        self.install("--global", "--pull")
+        installed = (self.destination / "gak-checkpoint/SKILL.md").read_text()
+        self.assertIn("Updated upstream skill", installed)
+        self.assertEqual(self.state_records(), {str(self.destination): commit})
+        self.assertEqual(self.config.read_text(), custom)
+        self.assertEqual(run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip(), commit)
+
+    def test_pull_works_with_project_target(self):
+        commit = self.advance_upstream()
+        self.install("--pull", "--target", str(self.target))
+        installed = (self.target / ".agents/skills/gak-checkpoint/SKILL.md").read_text()
+        self.assertIn("Updated upstream skill", installed)
+        self.assertEqual(self.state_records(), {str(self.target / ".agents/skills"): commit})
+
+    def test_pull_failure_leaves_existing_installation_and_settings_unchanged(self):
+        self.install()
+        installed = self.destination / "gak-checkpoint/SKILL.md"
+        original = installed.read_bytes()
+        custom = self.config.read_text() + "\n# Personal settings\n"
+        self.config.write_text(custom)
+        result = run("git", "remote", "set-url", "origin", str(self.root / "missing remote"), cwd=self.checkout)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = self.install("--global", "--pull", success=False)
+        self.assertIn("pull failed; installation stopped", result.stderr)
+        self.assertEqual(installed.read_bytes(), original)
+        self.assertEqual(self.config.read_text(), custom)
+
+    def test_pull_rejects_diverged_history_without_installing(self):
+        self.advance_upstream()
+        template = self.checkout / "crew-manager.yaml.template"
+        template.write_text(template.read_text() + "\n# Local commit\n")
+        self.commit_changes(self.checkout)
+        original = run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip()
+        # User pull preferences must not turn this into a rebase or merge.
+        result = run("git", "config", "pull.rebase", "true", cwd=self.checkout)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.install("--global", "--pull", success=False)
+        self.assertEqual(run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip(), original)
+        self.assertFalse(self.destination.exists())
+        self.assertFalse(self.config.exists())
+
+    def test_pull_preserves_conflicting_local_edits_without_installing(self):
+        self.advance_upstream()
+        skill = self.checkout / "skills/gak-checkpoint/SKILL.md"
+        custom = skill.read_text() + "\nLocal edit\n"
+        skill.write_text(custom)
+        original = run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip()
+        result = run("git", "config", "merge.autoStash", "true", cwd=self.checkout)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.install("--global", "--pull", success=False)
+        self.assertEqual(run("git", "rev-parse", "HEAD", cwd=self.checkout).stdout.strip(), original)
+        self.assertEqual(skill.read_text(), custom)
+        self.assertFalse(self.destination.exists())
+        self.assertFalse(self.config.exists())
+
+    def test_pull_works_when_checkout_must_be_cloned(self):
+        shutil.rmtree(self.checkout)
+        self.env.update(GIT_CONFIG_COUNT="1",
+                        GIT_CONFIG_KEY_0=f"url.{self.fixture}.insteadOf",
+                        GIT_CONFIG_VALUE_0="https://github.com/gemyago/agent-kit.git")
+        # Run the entry script outside the cache, as with the curl install.
+        result = run("bash", str(ROOT / "install.sh"), "--global", "--pull", env=self.env)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual({p.name for p in self.destination.iterdir()}, SKILLS)
+        self.assertTrue(self.config.is_file())
+
     def test_fresh_install_and_update_preserve_personal_settings(self):
         self.install()
         self.assertEqual({p.name for p in self.destination.iterdir()}, SKILLS)
         self.assertEqual(self.config.read_bytes(), (self.checkout / "crew-manager.yaml.template").read_bytes())
         custom = self.config.read_text().replace("openai/gpt-6.1-sol", "openai/personal-model")
         self.config.write_text(custom)
-        extra = self.destination / "gak-crew-manager/personal.md"
-        extra.write_text("Keep this")
         (self.destination / "gak-checkpoint/SKILL.md").write_text(
             (self.destination / "gak-checkpoint/SKILL.md").read_text() + "\nOld installed text\n")
         self.install()
         self.assertEqual(self.config.read_text(), custom)
-        self.assertEqual(extra.read_text(), "Keep this")
         self.assertNotIn("Old installed text", (self.destination / "gak-checkpoint/SKILL.md").read_text())
         ignored = run("git", "check-ignore", "crew-manager.yaml", cwd=self.checkout)
         self.assertEqual(ignored.returncode, 0)
         self.assertTrue((self.destination / "gak-crew-manager/references/chat-mode.md").is_file())
 
-    def test_unrelated_skill_collision_fails_before_writes(self):
+    def test_install_replaces_existing_matching_skill_without_metadata(self):
         conflict = self.destination / "gak-crew-manager"
         conflict.mkdir(parents=True)
-        original = "---\nname: gak-crew-manager\n---\nSomeone else's skill\n"
-        (conflict / "SKILL.md").write_text(original)
-        self.install(success=False)
-        self.assertEqual((conflict / "SKILL.md").read_text(), original)
-        self.assertEqual(list(self.destination.iterdir()), [conflict])
-        self.assertFalse(self.config.exists())
+        (conflict / "SKILL.md").write_text("Locally changed skill")
+        unrelated = self.destination / "another-skill"
+        unrelated.mkdir()
+        (unrelated / "SKILL.md").write_text("Unrelated skill")
+        self.install()
+        self.assertEqual((conflict / "SKILL.md").read_bytes(),
+                         (self.checkout / "skills/gak-crew-manager/SKILL.md").read_bytes())
+        self.assertEqual((unrelated / "SKILL.md").read_text(), "Unrelated skill")
 
     def test_symlink_in_destination_is_rejected(self):
         self.install()
+        state = (self.checkout / ".install-state").read_bytes()
         external = self.root / "outside.md"
         external.write_text("Unchanged")
         (self.destination / "gak-crew-manager/custom.md").symlink_to(external)
         self.install(success=False)
         self.assertEqual(external.read_text(), "Unchanged")
+        self.assertEqual((self.checkout / ".install-state").read_bytes(), state)
 
-    def legacy_manager(self):
+    def test_legacy_destination_settings_seed_personal_config(self):
         legacy = self.destination / "crew-manager"
         legacy.mkdir(parents=True)
-        (legacy / "SKILL.md").write_text(
-            '---\nname: crew-manager\nmetadata:\n  gemyago-source-path: "skills/crew-manager"\n---\nLegacy\n')
-        return legacy
-
-    def test_owned_legacy_install_migrates_and_preserves_config(self):
-        legacy = self.legacy_manager()
         custom = (self.checkout / "crew-manager.yaml.template").read_text() + "\n# Personal policy\n"
         (legacy / "config.yaml").write_text(custom)
-        (legacy / "notes.md").write_text("Personal notes")
         self.install()
-        self.assertFalse(legacy.exists())
         self.assertEqual(self.config.read_text(), custom)
-        self.assertEqual((self.destination / "gak-crew-manager/notes.md").read_text(), "Personal notes")
+        self.assertEqual((legacy / "config.yaml").read_text(), custom)
         self.install()
         self.assertEqual(self.config.read_text(), custom)
 
     def test_existing_personal_config_wins_over_legacy(self):
-        legacy = self.legacy_manager()
+        legacy = self.destination / "crew-manager"
+        legacy.mkdir(parents=True)
         (legacy / "config.yaml").write_text("legacy settings")
         self.config.write_text("personal settings")
         self.install()
@@ -146,14 +249,6 @@ class InstallationTests(unittest.TestCase):
         ignored = run("git", "check-ignore", "skills/crew-manager/config.yaml", cwd=self.checkout)
         self.assertEqual(ignored.returncode, 0)
 
-    def test_legacy_path_conflict_is_rejected_before_migration(self):
-        legacy = self.legacy_manager()
-        (legacy / "references").write_text("Personal file")
-        self.install(success=False)
-        self.assertEqual((legacy / "references").read_text(), "Personal file")
-        self.assertFalse((self.destination / "gak-crew-manager").exists())
-        self.assertFalse(self.config.exists())
-
     def test_personal_config_symlink_is_rejected_without_modifying_target(self):
         external = self.root / "settings.yaml"
         external.write_text("Personal settings")
@@ -161,6 +256,7 @@ class InstallationTests(unittest.TestCase):
         self.install(success=False)
         self.assertEqual(external.read_text(), "Personal settings")
         self.assertFalse(self.destination.exists())
+        self.assertFalse((self.checkout / ".install-state").exists())
 
     def test_unrelated_legacy_name_is_left_alone(self):
         legacy = self.destination / "crew-manager"
@@ -169,6 +265,145 @@ class InstallationTests(unittest.TestCase):
         self.install()
         self.assertEqual((legacy / "SKILL.md").read_text(), "Unrelated skill")
         self.assertTrue((self.destination / "gak-crew-manager/SKILL.md").is_file())
+
+    def test_install_copies_committed_files_without_changes(self):
+        changed = self.checkout / "skills/gak-checkpoint/SKILL.md"
+        committed = changed.read_bytes()
+        changed.write_text("Uncommitted edit")
+        (changed.parent / "untracked.md").write_text("Untracked")
+        self.install()
+        self.assertEqual((self.destination / "gak-checkpoint/SKILL.md").read_bytes(), committed)
+        self.assertFalse((self.destination / "gak-checkpoint/untracked.md").exists())
+        for name in SKILLS:
+            for source in (self.fixture / "skills" / name).rglob("*"):
+                if source.is_file():
+                    installed = self.destination / name / source.relative_to(self.fixture / "skills" / name)
+                    self.assertEqual(installed.read_bytes(), source.read_bytes())
+                    self.assertEqual(installed.stat().st_mode & 0o777, source.stat().st_mode & 0o777)
+        self.assertEqual({p.name for p in self.destination.iterdir()}, SKILLS)
+        ignored = run("git", "check-ignore", ".install-state", cwd=self.checkout)
+        self.assertEqual(ignored.returncode, 0)
+
+    def test_renamed_skill_removes_old_directory(self):
+        self.install()
+        old = self.checkout / "skills/gak-checkpoint"
+        new = self.checkout / "skills/gak-renamed-checkpoint"
+        old.rename(new)
+        skill = new / "SKILL.md"
+        skill.write_text(skill.read_text().replace("name: gak-checkpoint", "name: gak-renamed-checkpoint"))
+        (self.destination / "gak-checkpoint/local.md").write_text("Local addition")
+        self.commit_changes(self.checkout)
+        self.install()
+        self.assertFalse((self.destination / "gak-checkpoint").exists())
+        self.assertEqual((self.destination / new.name / "SKILL.md").read_bytes(), skill.read_bytes())
+        self.assertEqual(self.state_records(), {str(self.destination): self.head()})
+
+    def test_update_removes_deleted_skill_and_modified_obsolete_files(self):
+        self.install()
+        obsolete = "gak-crew-manager/references/chat-mode.md"
+        (self.destination / obsolete).write_text("Locally changed obsolete file")
+        (self.checkout / "skills" / obsolete).unlink()
+        shutil.rmtree(self.checkout / "skills/gak-crew-explore")
+        self.commit_changes(self.checkout)
+        self.install()
+        self.assertFalse((self.destination / obsolete).exists())
+        self.assertFalse((self.destination / "gak-crew-explore").exists())
+        self.assertEqual(self.state_records(), {str(self.destination): self.head()})
+
+    def test_same_commit_install_repairs_files_and_keeps_one_state_record(self):
+        self.install()
+        missing = self.destination / "gak-crew-manager/references/chat-mode.md"
+        missing.unlink()
+        changed = self.destination / "gak-checkpoint/SKILL.md"
+        changed.write_text("Changed")
+        self.install()
+        self.assertEqual(missing.read_bytes(),
+                         (self.checkout / "skills/gak-crew-manager/references/chat-mode.md").read_bytes())
+        self.assertEqual(changed.read_bytes(), (self.checkout / "skills/gak-checkpoint/SKILL.md").read_bytes())
+        self.assertEqual(self.state_records(), {str(self.destination): self.head()})
+
+    def test_registry_tracks_each_destination_independently(self):
+        self.install()
+        original = self.head()
+        self.install("--target", str(self.target))
+        obsolete = "gak-crew-manager/references/chat-mode.md"
+        (self.checkout / "skills" / obsolete).unlink()
+        self.commit_changes(self.checkout)
+        self.install()
+        project_destination = self.target / ".agents/skills"
+        self.assertFalse((self.destination / obsolete).exists())
+        self.assertTrue((project_destination / obsolete).exists())
+        self.assertEqual(self.state_records(), {str(self.destination): self.head(),
+                                               str(project_destination): original})
+        self.install("--target", str(self.target / "."))
+        self.assertFalse((project_destination / obsolete).exists())
+        self.assertEqual(self.state_records(), {str(self.destination): self.head(),
+                                               str(project_destination): self.head()})
+
+    def test_unavailable_installed_commit_stops_before_writes(self):
+        self.install()
+        state = self.checkout / ".install-state"
+        state.write_text(f"{self.destination}\t{'0' * 40}\n")
+        installed = self.destination / "gak-checkpoint/SKILL.md"
+        installed.write_text("Unchanged installation")
+        original = state.read_bytes()
+        self.config.unlink()
+        result = self.install(success=False)
+        self.assertIn("is unavailable", result.stderr)
+        self.assertEqual(installed.read_text(), "Unchanged installation")
+        self.assertEqual(state.read_bytes(), original)
+        self.assertFalse(self.config.exists())
+
+    def test_structural_conflict_does_not_remove_files_or_advance_state(self):
+        self.install()
+        original = (self.checkout / ".install-state").read_bytes()
+        obsolete = self.checkout / "skills/gak-crew-manager/references/chat-mode.md"
+        obsolete.unlink()
+        new = self.checkout / "skills/gak-checkpoint/new-directory/new.md"
+        new.parent.mkdir()
+        new.write_text("New file")
+        (self.destination / "gak-checkpoint/new-directory").write_text("Blocking file")
+        self.commit_changes(self.checkout)
+        self.install(success=False)
+        self.assertTrue((self.destination / "gak-crew-manager/references/chat-mode.md").is_file())
+        self.assertEqual((self.checkout / ".install-state").read_bytes(), original)
+
+    def test_update_handles_file_and_directory_transitions(self):
+        first = self.checkout / "skills/gak-checkpoint/file-to-directory"
+        second = self.checkout / "skills/gak-checkpoint/directory-to-file"
+        first.write_text("Old file")
+        second.mkdir()
+        (second / "old.md").write_text("Old nested file")
+        self.commit_changes(self.checkout)
+        self.install()
+        first.unlink()
+        nested = first / "directory with trailing newline\n"
+        nested.mkdir(parents=True)
+        (nested / "new file\nwith newline.md").write_text("New nested file")
+        shutil.rmtree(second)
+        second.write_text("New file")
+        self.commit_changes(self.checkout)
+        self.install()
+        self.assertEqual((self.destination / "gak-checkpoint/file-to-directory/directory with trailing newline\n/new file\nwith newline.md").read_text(),
+                         "New nested file")
+        self.assertEqual((self.destination / "gak-checkpoint/directory-to-file").read_text(), "New file")
+
+    def test_update_can_remove_all_skills_and_repeat(self):
+        self.install()
+        shutil.rmtree(self.checkout / "skills")
+        self.commit_changes(self.checkout)
+        self.install()
+        self.assertEqual(list(self.destination.iterdir()), [])
+        self.install()
+        self.assertEqual(self.state_records(), {str(self.destination): self.head()})
+
+    def test_install_state_symlink_is_rejected(self):
+        external = self.root / "outside-state"
+        external.write_text("Unchanged")
+        (self.checkout / ".install-state").symlink_to(external)
+        self.install(success=False)
+        self.assertEqual(external.read_text(), "Unchanged")
+        self.assertFalse(self.destination.exists())
 
     def test_setup_installs_skills_and_generates_from_personal_config(self):
         script = self.checkout / "skills/gak-crew-manager/scripts/setup.sh"

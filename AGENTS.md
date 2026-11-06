@@ -20,8 +20,9 @@
 ## Installation and OpenCode
 
 - Keep the Bash installer compatible with Bash 3.2 and Git alone. Python and PyYAML are used by OpenCode generation and its tests.
-- The Bash installer installs committed files from the checkout's HEAD and stamps source metadata. Preserve its ownership checks: never overwrite unrelated skills or migrate unrecognized legacy copies.
-- The skills CLI does not write that ownership metadata. Do not recommend running the Bash installer over CLI-managed skills in the same destination.
+- The Bash installer installs committed files from the checkout's HEAD without changing frontmatter. Keep its destination-to-commit registry in the checkout's ignored `.install-state` file; never add installer metadata to destination directories.
+- Updates remove obsolete installed paths using the recorded commit, without checking for local edits. Keep unrelated skill names untouched, preserve personal crew settings, and stop before installation if the recorded commit is unavailable.
+- The skills CLI does not maintain this registry. Do not recommend mixing the Bash installer and CLI in the same destination.
 - OpenCode setup and regeneration helpers live in `skills/gak-crew-manager/scripts/`. Generate agents from the shared personal YAML, using configured names and settings rather than a fixed roster.
 - Model or agent-name changes require regenerating OpenCode definitions. Keep generated prompts and permissions aligned with the actual configuration path and worker names.
 
