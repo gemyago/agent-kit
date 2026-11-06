@@ -5,27 +5,31 @@ description: "Preserve useful conversation context through numbered checkpoints 
 
 # Checkpoint
 
-Separate marking a resume point from carrying later findings back to it.
+Mentioning that checkpoints will be used only opts into the workflow. Discuss
+normally until the user explicitly asks to create one. Resuming an existing
+checkpoint does not request the next one.
 
 - **Mark:** Use the next number in the active conversation, starting at 1.
+  Use the previous checkpoint as the source boundary, or the conversation's
+  start for Checkpoint 1, unless the user chooses another position.
   Identify the exact message boundary, including before/after for retrospective
   checkpoints. Include the overall goal in Checkpoint 1; repeat it only if changed.
-- **Distill:** Summarize what was learned after the chosen checkpoint using the
-  next number and the template below. Preserve outcomes, essential rationale,
-  constraints, and useful exact references. Label uncertainty. Omit exploration,
-  abandoned approaches, empty sections, and facts already retained before the
-  fork point. Keep enough detail to continue without rediscovery.
-- **Resume:** Fork from the chosen boundary and append the new checkpoint there.
+- **Distill:** Summarize the conversation from the source boundary through the
+  request using the next number and the paste-ready template below. Preserve
+  outcomes, decisions, essential rationale, constraints, and useful exact
+  references. Label uncertainty. Omit exploration, abandoned approaches, and
+  facts already retained before the fork point. Say if nothing remains open.
+  Keep enough detail to continue without rediscovery.
+- **Resume:** If supported, fork from the chosen historical boundary and append
+  the new checkpoint there as part of the explicit request.
   Report the destination and continue there only as requested. The new checkpoint
   becomes the next resume point. Do not fork the exploration's latest message
   and claim its history was removed.
 
 Use available harness tools:
 
-- If they only fork the latest history, save an idle fork at each clean
-  checkpoint before exploring and record its chat ID. Explore in the original
-  chat; keep the fork idle until you send it the distilled checkpoint, then
-  continue in that fork.
+- Never create a checkpoint or idle fork after each message, after exploration,
+  or in anticipation of a future request.
 - If the requested boundary cannot be forked automatically, give its exact
   manual location and a paste-ready checkpoint, then wait for the user to resume
   there.
