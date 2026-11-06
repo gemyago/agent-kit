@@ -34,6 +34,8 @@ from its upstream before installing (fast-forward only):
 bash ~/.gemyago-agent-kit/install.sh --global --pull
 ```
 
+Rerunning the Bash installer updates skills and removes obsolete installed files.
+
 Crew settings live in `~/.gemyago-agent-kit/crew-manager.yaml`. The Bash installer
 initializes this file without overwriting existing settings. For a CLI-only
 install, create it from [crew-manager.yaml.template](crew-manager.yaml.template).
