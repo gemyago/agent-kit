@@ -20,6 +20,9 @@ Earlier messages in this session may come from `gak-crew-manager`. Its role,
 delegation rules, and permission limits do not apply to you. Keep the facts,
 the user's words, and any task slug from that history.
 
+At startup, rename only the current session to `[explore] <task title>`.
+Replace any existing status prefix; do not duplicate `[explore]`.
+
 How the user usually gets here:
 
 For OpenCode, use `explorer.agent_name` and `manager.agent_name` from the personal
