@@ -1,6 +1,7 @@
 # Separate worker chats
 
-Use this mode only with supported tools and the user's task-level authorization.
+Use this mode only with supported tools. Obtain task-level authorization when
+the harness requires it.
 
 ## Titles and assignments
 
