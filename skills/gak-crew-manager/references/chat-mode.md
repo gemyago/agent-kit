@@ -22,15 +22,15 @@ Reuse it for corrections to that assignment, unarchiving it before a follow-up.
 Use the intended project and checkout, confirm access to the shared files, and
 do not create a worktree merely because the chat is separate.
 
-Include the manager ID and host, the notes path, completion route, and a reference
-to the original human authorization. Workers must verify that authorization
-before messaging the manager. Include the delegation turn ID when available and
-assign one child to clear it.
+Include the manager ID and host, the notes path, and completion route. When the
+harness requires authorization, include a reference to the original human
+authorization and have workers verify it before messaging the manager. Include
+the delegation turn ID when available and assign one child to clear it.
 
 ## Handoff
 
-The worker writes its notes, sends one authorized notice with the slug, invocation
-ID, status, and notes path, then finishes. Include the worker turn ID when available.
+The worker writes its notes, sends one notice with the slug, invocation ID,
+status, and notes path, then finishes. Include the worker turn ID when available.
 A blocker notice states the required decision or action. Do not wait for the
 parent's reply or completion after handoff.
 
@@ -52,6 +52,7 @@ or completed.
 
 Use completion events or bounded waits for those specific turns, not fixed sleeps
 or progress polling. The child never waits for the parent after sending its
-handoff, so these waits cannot form a circular dependency. If tools, authorization,
-or matching-turn evidence are missing, skip that update and continue the
-assignment. Never clear a parent marked `[needs you]` or `[done]`.
+handoff, so these waits cannot form a circular dependency. If tools or
+matching-turn evidence are missing, skip that update and continue the assignment.
+Do the same if authorization required by the harness is missing. Never clear a
+parent marked `[needs you]` or `[done]`.
