@@ -50,12 +50,16 @@ workers. Without required approval, use native subagents.
 Preserve the user's choice for the task. For chat mode, read
 [chat-mode.md](references/chat-mode.md) before delegation.
 
-## Continue with fresh context
+## Compact a task
 
-When the user requests fresh context, follow
-[fresh-context.md](references/fresh-context.md). Continue the same task through
-a durable handoff and a new chat or session. Preserve its scope, permissions,
-session mode, configuration, and worker completion routes.
+When the user requests compaction or continuation in a new session, use
+[gak-crew-compact](../gak-crew-compact/SKILL.md).
+
+When given `compaction-<NNN>.md`, read it and the linked task files. Reuse its
+slug, checkout, configuration, session mode, permissions, and invocation sequence.
+Record this session as the manager in the journal and continue the next authorized
+action. Check current state through a worker before repeating a side effect.
+If the objective is complete, report the recorded outcome.
 
 ## Delegate
 

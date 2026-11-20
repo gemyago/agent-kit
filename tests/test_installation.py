@@ -10,7 +10,7 @@ import unittest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = {"gak-checkpoint", "gak-crew-explore", "gak-crew-manager"}
+SKILLS = {"gak-checkpoint", "gak-crew-compact", "gak-crew-explore", "gak-crew-manager"}
 
 
 def run(*args, env=None, cwd=None):
@@ -415,6 +415,7 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(manager["model"], config["manager"]["opencode_model"])
         self.assertEqual(manager["permission"]["read"][str(self.config)], "allow")
         self.assertEqual(manager["permission"]["external_directory"][str(self.checkout / "**")], "allow")
+        self.assertEqual(manager["permission"]["skill"]["gak-crew-compact"], "allow")
         self.assertIn(str(self.config), text)
         _, worker_text = self.agent("gak-crew-p3")
         self.assertIn("references/shared-rules.md", worker_text)

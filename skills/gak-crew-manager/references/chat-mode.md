@@ -16,7 +16,7 @@ prefix before yielding:
 | `[handed off]` | A successor manager owns continuation. | Preserve until a supported read update is safe. |
 
 For a user-requested manager replacement, follow
-[fresh-context.md](fresh-context.md) for title and ownership ordering.
+[gak-crew-compact](../../gak-crew-compact/SKILL.md).
 
 Name children `[child] <base title> - <invocationId padded to four digits>`.
 If the base changes, update all task chats and preserve their prefixes and IDs.
