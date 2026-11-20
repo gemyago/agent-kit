@@ -50,14 +50,6 @@ workers. Without required approval, use native subagents.
 Preserve the user's choice for the task. For chat mode, read
 [chat-mode.md](references/chat-mode.md) before delegation.
 
-## Continue from a compaction snapshot
-
-When given `compaction-<NNN>.md`, read it and the linked task files. Reuse its
-slug, checkout, configuration, session mode, permissions, and invocation sequence.
-Record this session as the manager in the journal and continue the next authorized
-action. Check current state through a worker before repeating a side effect.
-If the objective is complete, report the recorded outcome.
-
 ## Delegate
 
 - Assign one self-contained task per worker. Group closely coupled work without over-splitting it.

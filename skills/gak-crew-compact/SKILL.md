@@ -29,6 +29,13 @@ The snapshot carries the following context.
 - The task slug, original manager ID and title, journal and approved brief paths, worker notes, and next invocation ID. Distinguish consumed results from assignments needing follow-up.
 - The next authorized action, including any decision needed from the user. If the objective is complete, make reporting its outcome the next action.
 
+Include continuation instructions addressed to the new manager in the snapshot
+itself. Tell it to read the linked task files, reuse the recorded slug, checkout,
+configuration, session mode, permissions, and invocation sequence, and record its
+session as the manager in the journal. Direct it to continue the next authorized
+action and check current state through a worker before repeating a side effect.
+If the objective is complete, direct it to report the recorded outcome.
+
 Link the snapshot in the journal before starting the next session. Keep credentials
 out of the snapshot and preserve the repository's rules for temporary files.
 
