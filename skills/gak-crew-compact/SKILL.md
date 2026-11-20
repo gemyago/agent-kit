@@ -5,13 +5,13 @@ description: "Compact an ongoing crew task into a numbered snapshot and continue
 
 # Crew compaction
 
-Follow [gak-crew-manager](../gak-crew-manager/SKILL.md) for scope, configuration,
-and coordination rules while preparing the snapshot. Preserve the task's existing
-authorization and session mode.
+Prepare a snapshot of an existing crew task so a new manager session can
+continue it. Preserve the task's scope, permissions, configuration, and session
+mode.
 
 ## Prepare a snapshot
 
-Wait for active worker turns to finish using the manager's completion protocol.
+Wait for active worker turns to finish using completion events or bounded waits.
 Consume their completed notes and update the journal before switching sessions.
 Record unfinished assignments and blockers for the next manager.
 

@@ -50,10 +50,7 @@ workers. Without required approval, use native subagents.
 Preserve the user's choice for the task. For chat mode, read
 [chat-mode.md](references/chat-mode.md) before delegation.
 
-## Compact a task
-
-When the user requests compaction or continuation in a new session, use
-[gak-crew-compact](../gak-crew-compact/SKILL.md).
+## Continue from a compaction snapshot
 
 When given `compaction-<NNN>.md`, read it and the linked task files. Reuse its
 slug, checkout, configuration, session mode, permissions, and invocation sequence.
@@ -98,9 +95,6 @@ Give the user a brief delegation notice and final report. Speak sooner for a
 decision, blocker, failure, or requested update.
 
 ## Use exploration briefs
-
-For discussion before implementation, use `gak-crew-explore` in a fork. Create the
-task directory and `user-input.md` first and give the user the slug.
 
 When the user supplies `brief-<NNN>.md`, read it and treat its decisions as approved
 input. Append its path to `user-input.md` and the journal. Read older briefs or

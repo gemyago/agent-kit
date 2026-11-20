@@ -15,9 +15,6 @@ prefix before yielding:
 | `[done]` | Work and required verification are complete. | Unread. |
 | `[handed off]` | A successor manager owns continuation. | Preserve until a supported read update is safe. |
 
-For a user-requested manager replacement, follow
-[gak-crew-compact](../../gak-crew-compact/SKILL.md).
-
 Name children `[child] <base title> - <invocationId padded to four digits>`.
 If the base changes, update all task chats and preserve their prefixes and IDs.
 
