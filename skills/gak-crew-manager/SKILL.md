@@ -50,6 +50,13 @@ workers. Without required approval, use native subagents.
 Preserve the user's choice for the task. For chat mode, read
 [chat-mode.md](references/chat-mode.md) before delegation.
 
+## Continue with fresh context
+
+When the user requests fresh context, follow
+[fresh-context.md](references/fresh-context.md). Continue the same task through
+a durable handoff and a new chat or session. Preserve its scope, permissions,
+session mode, configuration, and worker completion routes.
+
 ## Delegate
 
 - Assign one self-contained task per worker. Group closely coupled work without over-splitting it.

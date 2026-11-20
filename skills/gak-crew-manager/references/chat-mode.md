@@ -13,6 +13,10 @@ prefix before yielding:
 | `[working]` | Work can continue without user input. | The newly assigned child clears it after delegation. |
 | `[needs you]` | User action is required. | Unread. |
 | `[done]` | Work and required verification are complete. | Unread. |
+| `[handed off]` | A successor manager owns continuation. | Preserve until a supported read update is safe. |
+
+For a user-requested manager replacement, follow
+[fresh-context.md](fresh-context.md) for title and ownership ordering.
 
 Name children `[child] <base title> - <invocationId padded to four digits>`.
 If the base changes, update all task chats and preserve their prefixes and IDs.
