@@ -41,26 +41,37 @@ explicit checkout and session mode. Reuse the task directory and configuration.
 Do not create a worktree or repeat completed side effects because context is new.
 Pass only the handoff path and the minimum authoritative references.
 
-The startup prompt must tell the successor to read the handoff and wait for the
-old manager's handoff turn to finish before acting. Use a supported completion
-event or bounded wait for that turn. Then confirm that the handoff names this
-successor as owner. If completion or ownership cannot be confirmed, report the
-missing evidence and leave execution with the original manager.
+Give the successor a load-only first turn. Its prompt tells it to read the
+handoff, confirm access to the task files and explicit checkout, and report
+readiness with the objective and next authorized action. It must finish that
+turn without executing work or waiting for the old manager's turn. This manager
+startup does not use the child-start read-status protocol. Keep the supplied
+title throughout the handoff.
 
-In chat mode, give the successor the original exact title. Wait for a ready
-result with a usable ID and confirm access to the task files and checkout.
-Record the successor and transfer ownership in the handoff and journal. Then
+In chat mode, give the successor the original exact title. Require a successful
+load-only turn after creation returns an ID. Use a supported completion event or
+bounded wait for that turn, then check its readiness response. Record the
+successor and ready-turn evidence in the handoff and journal. Transfer ownership
+only after this check. Then
 replace only the old manager's status prefix with `[handed off]`, preserving the
 base title. For example, the old `[working] AGT-946 eval package` becomes
 `[handed off] AGT-946 eval package`. The successor keeps
-`[working] AGT-946 eval package`. Finish the old manager's handoff turn.
+`[working] AGT-946 eval package`. Send a continuation prompt that requires the
+successor to confirm recorded ownership and completion of the old manager's
+handoff turn before executing. Use supported completion events or bounded waits
+for that specific turn. Finish the old manager's turn without waiting for the
+successor's continuation. If those checks are unavailable, use a manual
+continuation after the old manager finishes. If the continuation prompt fails,
+record that failure and give the user the successor location to resume it.
 Do not implicitly archive or delete the old chat.
 
-If creation fails, remains pending, or required controls are unavailable, keep
-the original title and ownership. Report the handoff path and any partial
-successor ID. Give the user a manual route to open a fresh session in the same
-host, project, and checkout, then pass that path. Record ownership and the title
-change once the manual successor is ready. Check any partial creation before
+If creation or the load-only turn fails, remains pending, or required controls
+are unavailable, keep the original title and ownership. Report the handoff path,
+failure, and any partial successor ID. If a setting is unavailable, disclose it
+and use a supported configured fallback within the task's existing authorization.
+For manual continuation, have the user open a fresh session in the same host,
+project, and checkout, then pass the handoff path. Record ownership and the title
+change once its load-only turn succeeds. Check any partial creation before
 retrying so only one successor can begin work.
 
 ## Resume and handle late notices
