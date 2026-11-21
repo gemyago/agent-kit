@@ -6,6 +6,7 @@ Gemyago's skills for AI and agentic workflows.
 
 - [gak-crew-manager](skills/gak-crew-manager/SKILL.md): Coordinate workers through assignments, handoffs, and verification.
 - [gak-crew-explore](skills/gak-crew-explore/SKILL.md): Explore a task and prepare a brief for the crew manager.
+- [gak-crew-compact](skills/gak-crew-compact/SKILL.md): Compact a crew task into a snapshot and continue in a new manager session.
 - [gak-checkpoint](skills/gak-checkpoint/SKILL.md): Preserve useful conversation context through checkpoints and forks.
 
 ## Installation

@@ -88,9 +88,6 @@ decision, blocker, failure, or requested update.
 
 ## Use exploration briefs
 
-For discussion before implementation, use `gak-crew-explore` in a fork. Create the
-task directory and `user-input.md` first and give the user the slug.
-
 When the user supplies `brief-<NNN>.md`, read it and treat its decisions as approved
 input. Append its path to `user-input.md` and the journal. Read older briefs or
 linked files only as needed. Resolve blocking open questions before delegation.

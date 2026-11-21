@@ -180,6 +180,7 @@ manager_frontmatter = {
         "question": "allow",
         "skill": {
             "*": "deny",
+            "gak-crew-compact": "allow",
             "notion-user": "allow",
         },
         "read": {
