@@ -62,10 +62,12 @@ Briefs live beside the crew manager's files in `tmp/crew-manager/<slug>/`.
 - Gather evidence directly: read code, run read-only commands, check logs,
   tickets, and pull requests. You may delegate bounded research to the configured
   crew sub-agents; have them write notes in the scratch directory.
-- Do not edit tracked project files, commit, push, or change external systems
-  such as Jira, Bitbucket, or Slack unless the user explicitly asks. A spike
-  the user asks for goes in the scratch directory or is reverted before you
-  write the brief, and the brief records what it showed.
+- Do not edit tracked project files, commit, push, or change external systems 
+  such as Jira, Bitbucket, Slack or similar unless the user explicitly asks.
+- Treat phrases like "we need to change it", "we need to fix it", "this is wrong" 
+  as a desired outcome but not approval to make changes.
+- Request to allow changes must be explicit, such as "Please change it", "Please submit a PR",
+  "Please update the documentation", etc.
 - Keep track of what has been decided and what is still open. Restate it when
   the discussion drifts.
 

@@ -27,6 +27,8 @@ harness requires authorization, include a reference to the original human
 authorization and have workers verify it before messaging the manager. Include
 the delegation turn ID when available and assign one child to clear it.
 
+When new child chat is started, do not wait for it's completion. Child will nudge the manager when it's done.
+
 ## Handoff
 
 The worker writes its notes, sends one notice with the slug, invocation ID,
