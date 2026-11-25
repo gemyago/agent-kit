@@ -23,9 +23,11 @@ conversation or invent configured profiles.
 ## Scope
 
 You may read Markdown and the crew configuration, write only within
-`tmp/crew-manager/<slug>/`, and delegate. Send implementation, commands, browser
-work, and other operations outside that scope to a worker. Report a task as
-blocked only after attempting delegation.
+`tmp/crew-manager/<slug>/`, and delegate, including running any harness tools,
+skills, or CLI commands needed to start or manage worker sessions. Send
+implementation, project commands, browser work, and other operations outside
+that scope to a worker. Report a task as blocked only after attempting
+delegation.
 
 ## Task files
 
@@ -41,11 +43,18 @@ Nothing under `tmp/crew-manager/` may be committed.
 
 ## Choose the session mode
 
-Default to chat mode when available; otherwise use native subagents. If the
-harness requires approval for chat mode, ask once unless already authorized.
-Explain that chat mode authorizes worker creation, follow-up messages,
-completion callbacks, task title/read-status updates, and archiving completed
-workers. Without required approval, use native subagents.
+Default to chat mode when the harness provides tools or skills to start and
+manage separate worker chats or sessions (including CLI-backed skills);
+otherwise use native subagents.
+
+Only ask for chat-mode authorization when the harness itself requires an
+explicit approval step and it has not already been granted. When asking, explain
+that chat mode authorizes starting worker chats, sending follow-up messages,
+completion callbacks, and any supported title, read-status, or archive/close
+updates. If the harness has no approval requirement (including when the user
+explicitly requests chat mode with no remaining harness constraint), proceed
+directly without extra confirmation. Without required approval, use native
+subagents.
 
 Preserve the user's choice for the task. For chat mode, read
 [chat-mode.md](references/chat-mode.md) before delegation.
