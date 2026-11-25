@@ -1,7 +1,9 @@
 # Separate worker chats
 
-Use this mode only with supported tools. Obtain task-level authorization when
-the harness requires it.
+Use harness tools or skills (including CLI-backed skills) to run separate worker
+chats or sessions and receive their handoffs, while keeping crew-manager's task
+files, profiles, and verification rules. Apply the title, read-status, and
+archive/close rules below only when supported and not managed by the harness.
 
 ## Titles and assignments
 
@@ -18,16 +20,16 @@ Name children `[child] <base title> - <invocationId padded to four digits>`.
 If the base changes, update all task chats and preserve their prefixes and IDs.
 
 Create a fresh chat per assignment and always for independent verification.
-Reuse it for corrections to that assignment, unarchiving it before a follow-up.
-Use the intended project and checkout, confirm access to the shared files, and
-do not create a worktree merely because the chat is separate.
+Reuse it for corrections to that assignment, reopening or unarchiving it before
+a follow-up. Use the intended project and checkout, confirm access to the shared
+files, and do not create a worktree merely because the chat is separate.
 
 Include the manager ID and host, the notes path, and completion route. When the
 harness requires authorization, include a reference to the original human
 authorization and have workers verify it before messaging the manager. Include
 the delegation turn ID when available and assign one child to clear it.
 
-When new child chat is started, do not wait for it's completion. Child will nudge the manager when it's done.
+When a new child chat is started, do not wait for its completion. The child notifies the manager when it is done.
 
 ## Handoff
 
@@ -50,7 +52,7 @@ Immediately before a read or archive update, check that no newer turn is active
 or completed.
 
 - At startup, the assigned child waits for its parent's delegation turn to finish. Confirm it is still the latest turn and the title starts with `[working]`, then mark the parent read and begin work.
-- After reviewing a handoff, the parent waits for that child's turn to finish and confirms it is still the latest turn. Mark the child read and archive it when supported.
+- After reviewing a handoff, the parent waits for that child's turn to finish and confirms it is still the latest turn. Mark the child read and archive or close it when supported.
 
 Use completion events or bounded waits for those specific turns, not fixed sleeps
 or progress polling. The child never waits for the parent after sending its
