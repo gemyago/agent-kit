@@ -1,13 +1,9 @@
 # Separate worker chats
 
-Use this mode when the harness provides tools or skills to start a new chat or
-session for a worker and receive its handoff. If a harness skill governs
-session mechanics (including via CLI), follow it while keeping crew-manager's
-task files, profiles, and verification rules. Obtain task-level authorization
-only when required by the harness.
-
-Apply the title, read-status, and archive/close rules below only when the
-harness supports them and does not manage them automatically.
+Use harness tools or skills (including CLI-backed skills) to run separate worker
+chats or sessions and receive their handoffs, while keeping crew-manager's task
+files, profiles, and verification rules. Apply the title, read-status, and
+archive/close rules below only when supported and not managed by the harness.
 
 ## Titles and assignments
 

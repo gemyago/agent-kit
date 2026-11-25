@@ -44,12 +44,9 @@ Nothing under `tmp/crew-manager/` may be committed.
 
 Default to chat mode when the harness provides tools or skills (including
 CLI-backed skills) to run separate worker chats or sessions; otherwise use
-native subagents. Ask for approval once only when the harness requires it and
-it has not already been granted (no extra confirmation is needed otherwise,
-including when the user asks for chat mode). When asking, explain that chat
-mode authorizes worker creation, follow-up messages, completion callbacks, and
-any supported title, read-status, or archive/close updates. Without required
-approval, use native subagents.
+native subagents. Ask once for task-level approval only when the harness
+requires it and it has not already been granted; without required approval, use
+native subagents.
 
 Preserve the user's choice for the task. For chat mode, read
 [chat-mode.md](references/chat-mode.md) before delegation.
