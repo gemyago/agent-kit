@@ -251,6 +251,23 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual((legacy / "SKILL.md").read_text(), "Unrelated skill")
         self.assertTrue((self.destination / "gak-crew-manager/SKILL.md").is_file())
 
+    def test_install_echoes_file_operations(self):
+        skill = self.destination / "gak-checkpoint/SKILL.md"
+        result = self.install()
+        self.assertIn(f"installing: {skill}\n", result.stdout)
+        self.assertNotIn(f"updating: {skill}\n", result.stdout)
+        result = self.install()
+        self.assertIn(f"updating: {skill}\n", result.stdout)
+        self.assertNotIn(f"installing: {skill}\n", result.stdout)
+        obsolete = "gak-crew-manager/references/chat-mode.md"
+        (self.checkout / "skills" / obsolete).unlink()
+        shutil.rmtree(self.checkout / "skills/gak-crew-explore")
+        self.commit_changes(self.checkout)
+        result = self.install()
+        self.assertIn(f"removing: {self.destination / obsolete}\n", result.stdout)
+        self.assertIn(f"removing: {self.destination / 'gak-crew-explore'}\n", result.stdout)
+        self.assertNotIn(f"removing: {self.destination / 'gak-crew-explore/SKILL.md'}\n", result.stdout)
+
     def test_install_copies_committed_files_without_changes(self):
         changed = self.checkout / "skills/gak-checkpoint/SKILL.md"
         committed = changed.read_bytes()

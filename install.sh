@@ -21,6 +21,7 @@ EOF
 
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 argument_error() { printf 'error: %s\n' "$*" >&2; usage >&2; exit 2; }
+log_file_op() { printf '%s: %s\n' "$1" "$2"; }
 
 scope=''
 target=''
@@ -264,6 +265,9 @@ for source in "$scratch/previous/"*; do
   [[ -d "$source" ]] || continue
   name="${source##*/}"
   if [[ ! -d "$scratch/source/$name" ]]; then
+    if [[ -e "$destination/$name" ]]; then
+      log_file_op removing "$destination/$name"
+    fi
     rm -rf -- "$destination/$name"
   fi
 done
@@ -271,6 +275,9 @@ while IFS= read -r -d '' entry; do
   relative="${entry#*$'\t'}"
   relative="${relative#skills/}"
   [[ ! -f "$scratch/source/$relative" ]] || continue
+  if [[ -e "$destination/$relative" ]]; then
+    log_file_op removing "$destination/$relative"
+  fi
   rm -rf -- "$destination/$relative"
   parent="$relative"
   while [[ "$parent" == */* ]]; do
@@ -286,7 +293,13 @@ while IFS= read -r -d '' entry; do
   mkdir -p "$destination/${relative%/*}"
   # Replace directories and hard-linked files at incoming file paths as well.
   if [[ -d "$destination/$relative" ]]; then
+    log_file_op removing "$destination/$relative"
     rm -rf -- "$destination/$relative"
+  fi
+  if [[ -e "$destination/$relative" ]]; then
+    log_file_op updating "$destination/$relative"
+  else
+    log_file_op installing "$destination/$relative"
   fi
   mv -f "$scratch/source/$relative" "$destination/$relative"
 done < "$scratch/new-tree"
