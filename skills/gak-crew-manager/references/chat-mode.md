@@ -1,6 +1,6 @@
 # Separate worker chats
 
-Use harness tools or skills (including CLI-backed skills) to run separate worker
+Use harness tools or skills to run separate worker
 chats or sessions and receive their handoffs, while keeping crew-manager's task
 files, profiles, and verification rules. Apply the title, read-status, and
 archive/close rules below only when supported and not managed by the harness.
