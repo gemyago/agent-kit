@@ -8,7 +8,7 @@ assignment, including in a separate chat. Do not start another crew unless assig
 - State the completion protocol followed, checks and outcomes, failures, skips, uncertainty, and remaining work in your notes.
 - Keep evidence in the notes and return a concise status with their path. Report blockers promptly, without routine progress pings or requests for acknowledgment.
 
-In chat mode, follow any harness-provided session instructions alongside
-[chat-mode.md](chat-mode.md) for authorization, handoff, and applicable
-read-status ordering. After sending a final handoff, finish without waiting
-for the manager.
+In chat mode, follow any harness session instructions alongside
+[chat-mode.md](chat-mode.md) for authorization, handoff, and read-status
+ordering. After sending the agreed handoff, finish without waiting for the
+manager.
