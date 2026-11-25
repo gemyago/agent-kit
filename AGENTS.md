@@ -17,6 +17,10 @@
 - Preserve legacy personal settings during migration, including `skills/crew-manager/config.yaml` in older checkouts. Keep that legacy path ignored by Git.
 - Store all temporary files and test fixtures under the workspace's `tmp/` directory, never a system temporary directory or `.tmp/`. Never commit temporary files.
 
+## Rules
+
+- Skills in this repository are harness agnostic. All updates must not use harness-specific terminology or features.
+
 ## Installation
 
 - Keep the Bash installer compatible with Bash 3.2 and Git alone.
