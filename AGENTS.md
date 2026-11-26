@@ -17,28 +17,29 @@
 - Preserve legacy personal settings during migration, including `skills/crew-manager/config.yaml` in older checkouts. Keep that legacy path ignored by Git.
 - Store all temporary files and test fixtures under the workspace's `tmp/` directory, never a system temporary directory or `.tmp/`. Never commit temporary files.
 
-## Installation and OpenCode
+## Rules
 
-- Keep the Bash installer compatible with Bash 3.2 and Git alone. Python and PyYAML are used by OpenCode generation and its tests.
+- Skills in this repository are harness agnostic. All updates must not use harness-specific terminology or features.
+
+## Installation
+
+- Keep the Bash installer compatible with Bash 3.2 and Git alone.
 - The Bash installer installs committed files from the checkout's HEAD without changing frontmatter. Keep its destination-to-commit registry in the checkout's ignored `.install-state` file; never add installer metadata to destination directories.
 - Updates remove obsolete installed paths using the recorded commit, without checking for local edits. Keep unrelated skill names untouched, preserve personal crew settings, and stop before installation if the recorded commit is unavailable.
 - The skills CLI does not maintain this registry. Do not recommend mixing the Bash installer and CLI in the same destination.
-- OpenCode setup and regeneration helpers live in `skills/gak-crew-manager/scripts/`. Generate agents from the shared personal YAML, using configured names and settings rather than a fixed roster.
-- Model or agent-name changes require regenerating OpenCode definitions. Keep generated prompts and permissions aligned with the actual configuration path and worker names.
 
 ## Validation
 
-Install the test dependency and run the integration suite:
+Run the integration suite:
 
 ```bash
-python3 -m pip install 'PyYAML>=6,<7'
 python3 -m unittest discover -s tests -v
 ```
 
 After changing shell scripts, also run:
 
 ```bash
-bash -n install.sh skills/gak-crew-manager/scripts/setup.sh skills/gak-crew-manager/scripts/sync-opencode-agents.sh
+bash -n install.sh
 ```
 
 Keep the pull request workflow running the integration suite. Before reporting CI

@@ -1,4 +1,4 @@
-"""Installation and OpenCode integration checks. Run with python3 -m unittest discover -s tests -v."""
+"""Installation checks. Run with python3 -m unittest discover -s tests -v."""
 
 import os
 from pathlib import Path
@@ -6,8 +6,6 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-
-import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = {"gak-checkpoint", "gak-crew-compact", "gak-crew-explore", "gak-crew-manager"}
@@ -59,19 +57,6 @@ class InstallationTests(unittest.TestCase):
         result = run("bash", str(self.checkout / "install.sh"), *(args or ("--global",)), env=self.env)
         self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
         return result
-
-    def sync(self, success=True):
-        script = self.checkout / "skills/gak-crew-manager/scripts/sync-opencode-agents.sh"
-        result = run("bash", str(script), "--target", str(self.target), env=self.env)
-        self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
-        return result
-
-    def write_config(self, config):
-        self.config.write_text(yaml.safe_dump(config, sort_keys=False))
-
-    def agent(self, name):
-        text = (self.target / ".opencode/agents" / f"{name}.md").read_text()
-        return yaml.safe_load(text.split("---", 2)[1]), text
 
     def advance_upstream(self):
         upstream = self.root / "upstream"
@@ -186,7 +171,7 @@ class InstallationTests(unittest.TestCase):
         self.install()
         self.assertEqual({p.name for p in self.destination.iterdir()}, SKILLS)
         self.assertEqual(self.config.read_bytes(), (self.checkout / "crew-manager.yaml.template").read_bytes())
-        custom = self.config.read_text().replace("openai/gpt-6.1-sol", "openai/personal-model")
+        custom = self.config.read_text().replace("gpt-6.1-sol", "personal-model")
         self.config.write_text(custom)
         (self.destination / "gak-checkpoint/SKILL.md").write_text(
             (self.destination / "gak-checkpoint/SKILL.md").read_text() + "\nOld installed text\n")
@@ -265,6 +250,23 @@ class InstallationTests(unittest.TestCase):
         self.install()
         self.assertEqual((legacy / "SKILL.md").read_text(), "Unrelated skill")
         self.assertTrue((self.destination / "gak-crew-manager/SKILL.md").is_file())
+
+    def test_install_echoes_file_operations(self):
+        skill = self.destination / "gak-checkpoint/SKILL.md"
+        result = self.install()
+        self.assertIn(f"installing: {skill}\n", result.stdout)
+        self.assertNotIn(f"updating: {skill}\n", result.stdout)
+        result = self.install()
+        self.assertIn(f"updating: {skill}\n", result.stdout)
+        self.assertNotIn(f"installing: {skill}\n", result.stdout)
+        obsolete = "gak-crew-manager/references/chat-mode.md"
+        (self.checkout / "skills" / obsolete).unlink()
+        shutil.rmtree(self.checkout / "skills/gak-crew-explore")
+        self.commit_changes(self.checkout)
+        result = self.install()
+        self.assertIn(f"removing: {self.destination / obsolete}\n", result.stdout)
+        self.assertIn(f"removing: {self.destination / 'gak-crew-explore'}\n", result.stdout)
+        self.assertNotIn(f"removing: {self.destination / 'gak-crew-explore/SKILL.md'}\n", result.stdout)
 
     def test_install_copies_committed_files_without_changes(self):
         changed = self.checkout / "skills/gak-checkpoint/SKILL.md"
@@ -404,81 +406,6 @@ class InstallationTests(unittest.TestCase):
         self.install(success=False)
         self.assertEqual(external.read_text(), "Unchanged")
         self.assertFalse(self.destination.exists())
-
-    def test_setup_installs_skills_and_generates_from_personal_config(self):
-        script = self.checkout / "skills/gak-crew-manager/scripts/setup.sh"
-        result = run("bash", str(script), "--target", str(self.target), env=self.env)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual({p.name for p in (self.target / ".agents/skills").iterdir()}, SKILLS)
-        manager, text = self.agent("gak-crew-manager")
-        config = yaml.safe_load(self.config.read_text())
-        self.assertEqual(manager["model"], config["manager"]["opencode_model"])
-        self.assertEqual(manager["permission"]["read"][str(self.config)], "allow")
-        self.assertEqual(manager["permission"]["external_directory"][str(self.checkout / "**")], "allow")
-        self.assertEqual(manager["permission"]["skill"]["gak-crew-compact"], "allow")
-        self.assertIn(str(self.config), text)
-        _, worker_text = self.agent("gak-crew-p3")
-        self.assertIn("references/shared-rules.md", worker_text)
-
-    def test_regeneration_uses_configured_names_and_removes_stale_agents(self):
-        self.install()
-        self.sync()
-        config = yaml.safe_load(self.config.read_text())
-        config["workers"]["p2"]["agent_name"] = "custom-runner"
-        config["workers"]["p2"]["opencode_model"] = "test/custom-model"
-        self.write_config(config)
-        unrelated = self.target / ".opencode/agents/my-agent.md"
-        unrelated.write_text("Personal agent")
-        self.sync()
-        worker, _ = self.agent("custom-runner")
-        self.assertEqual(worker["model"], "test/custom-model")
-        manager, _ = self.agent("gak-crew-manager")
-        self.assertEqual(manager["permission"]["task"]["custom-runner"], "allow")
-        self.assertNotIn("crew-*", manager["permission"]["task"])
-        self.assertFalse((unrelated.parent / "gak-crew-p2.md").exists())
-        self.assertEqual(unrelated.read_text(), "Personal agent")
-
-    def test_generator_rejects_collisions_and_invalid_config_before_writes(self):
-        self.install()
-        agents = self.target / ".opencode/agents"
-        agents.mkdir(parents=True)
-        collision = agents / "gak-crew-p3.md"
-        collision.write_text("Personal agent")
-        self.sync(success=False)
-        self.assertEqual(list(agents.iterdir()), [collision])
-        self.assertEqual(collision.read_text(), "Personal agent")
-        collision.unlink()
-        config = yaml.safe_load(self.config.read_text())
-        config["workers"]["p3"]["agent_name"] = "../escaped"
-        self.write_config(config)
-        self.sync(success=False)
-        self.assertEqual(list(agents.iterdir()), [])
-        self.assertFalse((self.target / ".opencode/escaped.md").exists())
-
-    def test_generator_reports_missing_config(self):
-        result = self.sync(success=False)
-        self.assertIn(str(self.config), result.stderr)
-        self.assertFalse((self.target / ".opencode").exists())
-
-    def test_generator_rejects_duplicate_agent_names_before_writes(self):
-        self.install()
-        config = yaml.safe_load(self.config.read_text())
-        config["workers"]["p2"]["agent_name"] = config["manager"]["agent_name"]
-        self.write_config(config)
-        self.sync(success=False)
-        self.assertEqual(list((self.target / ".opencode/agents").iterdir()), [])
-
-    def test_generator_updates_legacy_generated_files(self):
-        self.install()
-        agents = self.target / ".opencode/agents"
-        agents.mkdir(parents=True)
-        marker = "<!-- Generated by crew-manager sync; edit its config.yaml and re-run. -->"
-        (agents / "gak-crew-manager.md").write_text(marker)
-        (agents / "crew-p2.md").write_text(marker)
-        self.sync()
-        self.assertFalse((agents / "crew-p2.md").exists())
-        manager, _ = self.agent("gak-crew-manager")
-        self.assertEqual(manager["mode"], "primary")
 
 
 if __name__ == "__main__":

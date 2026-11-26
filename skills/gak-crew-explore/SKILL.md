@@ -25,18 +25,13 @@ Replace any existing status prefix; do not duplicate `[explore]`.
 
 How the user usually gets here:
 
-For OpenCode, use `explorer.agent_name` and `manager.agent_name` from the personal
-crew configuration used by the manager. They default to `gak-crew-explore` and
+Use `explorer.agent_name` and `manager.agent_name` from the personal crew
+configuration used by the manager. They default to `gak-crew-explore` and
 `gak-crew-manager`, but preserved or customized configurations may use other names.
-The placeholders below refer to those configured agent names, not skill names.
 
-- OpenCode TUI: run `/fork` in the crew-manager session, then press Tab to
-  switch the forked session to the configured explorer agent.
-- OpenCode CLI: `opencode --session <session-id> --fork --agent <explorer-agent-name>`,
-  or `opencode --continue --fork --agent <explorer-agent-name>` for the latest session.
-  `opencode session list` shows session ids.
-- Other harnesses: use the harness's fork or branch feature and invoke this
-  skill in the new session. Without one, start a fresh session and give it the
+- When the harness can fork or branch a session, fork the crew-manager session
+  and continue as the configured explorer agent, or invoke this skill there.
+- Without a fork, start a fresh session, invoke this skill, and give it the
   task slug.
 
 ## Task directory
@@ -128,9 +123,8 @@ the start of work; "None" when there are none>
 After writing the brief, tell the user:
 
 - The brief path.
-- How to return: in the OpenCode TUI, open `/sessions` and pick the original
-  crew-manager session, or press Tab back to the configured manager agent if you are in the
-  same session.
+- How to return: open the original crew-manager session, or switch back to the
+  configured manager agent if you are still in the same session.
 - The exact message to send there, for example:
   `Continue <slug> from tmp/crew-manager/<slug>/brief-<NNN>.md`.
 
