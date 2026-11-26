@@ -45,8 +45,9 @@ Default to chat mode when the harness provides tools or skills to run
 separate worker chats or sessions; otherwise use native subagents. Ask once for task-level approval only when the harness
 requires it and it has not already been granted;
 
-Preserve the user's choice for the task. For chat mode, read
-[chat-mode.md](references/chat-mode.md) before delegation.
+In chat mode, delegate through separate worker chats. Selecting chat mode authorizes creating those chats and exchanging task messages with them. If a higher-priority instruction prevents this, quote the exact instruction and obtain the user's agreement before switching modes.
+
+For chat mode, read [chat-mode.md](references/chat-mode.md) before delegation.
 
 ## Delegate
 
